@@ -1,6 +1,6 @@
 # 🚀 EventPulse: Modern Event Management Portal
 
-**Author:** [Your Name]
+**Author:** Aman 
 
 EventPulse is a professional full-stack dashboard built to manage events and attendee registrations with high performance and a premium user experience.
 
