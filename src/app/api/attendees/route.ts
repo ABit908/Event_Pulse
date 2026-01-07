@@ -4,8 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    
-    // Check capacity before allowing registration
+  
     const event = await prisma.event.findUnique({
       where: { id: body.eventId },
       include: { _count: { select: { attendees: true } } }

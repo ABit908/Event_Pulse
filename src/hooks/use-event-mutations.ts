@@ -17,7 +17,7 @@ export function useCreateAttendee() {
       await queryClient.cancelQueries({ queryKey: ["events"] });
       const previousEvents = queryClient.getQueryData(["events"]);
       
-      // Optimistically update the cache
+
       return { previousEvents };
     },
     onError: (err, newAttendee, context) => {
