@@ -19,10 +19,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
+// Explicitly define the type to resolve the Vercel Build error
+type EventFormValues = z.infer<typeof eventSchema>;
+
 export function EventForm({ onSuccess }: { onSuccess: () => void }) {
   const queryClient = useQueryClient();
   
-  const form = useForm<z.infer<typeof eventSchema>>({
+  const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       title: "",
@@ -33,20 +36,27 @@ export function EventForm({ onSuccess }: { onSuccess: () => void }) {
   });
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (values: z.infer<typeof eventSchema>) => {
+    mutationFn: async (values: EventFormValues) => {
       const res = await fetch("/api/events", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(values),
       });
-      if (!res.ok) throw new Error();
-      return res.json();
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create event");
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
       toast.success("Event created successfully");
       onSuccess();
     },
-    onError: () => toast.error("Something went wrong"),
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
   });
 
   return (
@@ -58,48 +68,64 @@ export function EventForm({ onSuccess }: { onSuccess: () => void }) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Event Title</FormLabel>
-              <FormControl><Input placeholder="Annual Gala" {...field} /></FormControl>
+              <FormControl>
+                <Input placeholder="e.g. Annual Tech Conference" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-2 gap-4">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date</FormLabel>
-                <FormControl><Input type="datetime-local" {...field} /></FormControl>
+                <FormLabel>Date & Time</FormLabel>
+                <FormControl>
+                  <Input type="datetime-local" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="capacity"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Capacity</FormLabel>
-                <FormControl><Input type="number" {...field} /></FormControl>
+                <FormLabel>Max Capacity</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="100" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
+
         <FormField
           control={form.control}
           name="description"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Description</FormLabel>
-              <FormControl><Textarea placeholder="Describe the event..." {...field} /></FormControl>
+              <FormControl>
+                <Textarea 
+                  placeholder="Tell attendees what the event is about..." 
+                  className="resize-none"
+                  {...field} 
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? "Creating..." : "Create Event"}
+          {isPending ? "Creating Event..." : "Create Event"}
         </Button>
       </form>
     </Form>

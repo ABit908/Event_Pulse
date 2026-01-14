@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
+type RegistrationFormValues = z.infer<typeof attendeeSchema>;
+
 interface Props {
   eventId: string;
   onSuccess: () => void;
@@ -26,7 +28,7 @@ interface Props {
 export function RegistrationForm({ eventId, onSuccess }: Props) {
   const queryClient = useQueryClient();
   
-  const form = useForm<z.infer<typeof attendeeSchema>>({
+  const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(attendeeSchema),
     defaultValues: {
       name: "",
@@ -36,9 +38,10 @@ export function RegistrationForm({ eventId, onSuccess }: Props) {
   });
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (values: z.infer<typeof attendeeSchema>) => {
+    mutationFn: async (values: RegistrationFormValues) => {
       const res = await fetch("/api/attendees", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
       const data = await res.json();
@@ -50,7 +53,7 @@ export function RegistrationForm({ eventId, onSuccess }: Props) {
       toast.success("Successfully registered!");
       onSuccess();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message);
     },
   });
@@ -64,7 +67,9 @@ export function RegistrationForm({ eventId, onSuccess }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Full Name</FormLabel>
-              <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
+              <FormControl>
+                <Input placeholder="John Doe" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -75,7 +80,9 @@ export function RegistrationForm({ eventId, onSuccess }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email Address</FormLabel>
-              <FormControl><Input type="email" placeholder="john@example.com" {...field} /></FormControl>
+              <FormControl>
+                <Input type="email" placeholder="john@example.com" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
