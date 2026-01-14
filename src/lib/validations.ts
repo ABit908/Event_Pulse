@@ -6,9 +6,11 @@ export const eventSchema = z.object({
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Please enter a valid date",
   }),
-  capacity: z.coerce
-    .number({ invalid_type_error: "Capacity must be a number" })
-    .min(1, "Capacity must be at least 1"),
+  // Use .pipe() to ensure the output is strictly a number
+  capacity: z.preprocess(
+    (val) => Number(val), 
+    z.number({ invalid_type_error: "Capacity must be a number" }).min(1, "At least 1")
+  ),
 });
 
 export const attendeeSchema = z.object({
