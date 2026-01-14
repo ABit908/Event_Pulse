@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
+// Explicitly define the type for the resolver
 type RegistrationFormValues = z.infer<typeof attendeeSchema>;
 
 interface Props {
@@ -44,11 +45,13 @@ export function RegistrationForm({ eventId, onSuccess }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
+      
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to register");
       return data;
     },
     onSuccess: () => {
+      // Invalidate events to refresh the attendee list in the UI
       queryClient.invalidateQueries({ queryKey: ["events"] });
       toast.success("Successfully registered!");
       onSuccess();
